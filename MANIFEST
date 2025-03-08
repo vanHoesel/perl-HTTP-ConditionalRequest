@@ -2,4 +2,4 @@ MANIFEST
 Makefile.PL
 cpanfile
 lib/HTTP/ConditionalRequest.pm
-t/http/HTTP/ConditionalRequest/00_load.t 
+t/HTTP/ConditionalRequest/00_load.t 

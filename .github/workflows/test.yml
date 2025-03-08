@@ -1,0 +1,67 @@
+name: Test Module
+
+on:
+  push:
+    branches:
+      - '**'        # matches any branch
+  pull_request:
+    branches: 
+      - main       # PRs targeting main
+
+jobs:
+  prove:
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        perl: ['5.40', '5.36', '5.32', '5.28']
+
+    name: Quick Test Perl ${{ matrix.perl }}
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up perl
+      uses: shogo82148/actions-setup-perl@v1
+      with:
+        perl-version: ${{ matrix.perl }}
+
+    - name: Show Perl Version
+      run: perl -V
+
+    - name: Install Dependencies
+      run: |
+        cpanm --installdeps --notest .
+        cpanm --notest Test::Most
+
+    - name: Run Tests
+      run: prove -vrl
+
+  make:
+    needs: prove
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+
+    name: Full Build Test
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up perl
+      uses: shogo82148/actions-setup-perl@v1
+      with:
+        perl-version: '5.28'
+
+    - name: Show Perl Version
+      run: perl -V
+
+    - name: Install Dependencies
+      run: |
+        cpanm --installdeps --notest .
+        cpanm --notest Test::Most
+
+    - name: Run Tests
+      run: |
+        perl Makefile.PL
+        make test 
