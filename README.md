@@ -26,20 +26,15 @@ make install
 ```perl
 use HTTP::ConditionalRequest;
 
-my $status;
-my $message;
-
-( $status, $message ) = HTTP::ConditionalRequest->evaluate(
-    $incoming_request => (
-        if_modified_since   => 'Wed, 21 Oct 2023 10:00:00 GMT',
-        etag                => '2271-46ad-84e8-c370a3bca5f0',
+my ( $status, $message ) = HTTP::ConditionalRequest->evaluate(
+    $incoming_http_request, (
+        last_modified   => 'Wed, 21 Oct 2023 10:00:00 GMT',
+        etag            => '2271-46ad-84e8-c370a3bca5f0',
     )
 );
 
 do {
-
-    # procces request
-
+    # Procces the request
 } unless $status
 
 ```
@@ -49,10 +44,12 @@ or use imports:
 ```perl
 use HTTP::ConditionalRequest qw/required/;
 
-...
+$status = required( $incoming_http_request => %server_meta_data )
+    and return HTTP::Response->new( $status );
 
-$status = required( $rqst => %meta_data );
-
+do {
+    # Process the request
+}
 ```
 
 ## Features

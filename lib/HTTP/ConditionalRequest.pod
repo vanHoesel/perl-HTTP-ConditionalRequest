@@ -1,0 +1,139 @@
+=head1 NAME
+
+HTTP::ConditionalRequest - RFC 9110 Compliant Conditional Request Evaluation
+
+=head1 SYNOPSIS
+
+Using class method
+
+    use HTTP::ConditionalRequest;
+    
+    my ($status, $message) = HTTP::ConditionalRequest->evaluate(
+        $incoming_http_request, (
+            if_modified_since   => 'Wed, 21 Oct 2023 10:00:00 GMT',
+            etag                => '2271-46ad-84e8-c370a3bca5f0',
+        )
+    );
+
+    do {
+        # Procces the request
+    } unless $status;
+
+Using imported function
+
+    use HTTP::ConditionalRequest qw/required/;
+    
+    my $status = required( $incoming_http_request, %servermeta_data )
+        and return HTTP::Response->new( $status );
+
+=head1 DESCRIPTION
+
+This module provides a complete implementation of HTTP Conditional Requests as
+specified in RFC 9110 Section 13. It evaluates preconditions for HTTP requests
+and determines whether the server should proceed with processing the request.
+
+The module offers two main approaches:
+
+=over 4
+
+=item * C<evaluate> - General precondition evaluation for any HTTP method
+
+=item * C<required> - Strict evaluation for unsafe/destructive methods requiring
+precondition headers
+
+=back
+
+=head1 METHODS
+
+=head2 evaluate
+
+    my ($status, $message) = HTTP::ConditionalRequest->evaluate(
+        $request => %preconditions
+    );
+    my $status = HTTP::ConditionalRequest->evaluate($request => %preconditions);
+
+Evaluates HTTP preconditions according to RFC 9110. In scalar context returns
+only the status code, in list context returns both status code and detailed
+message.
+
+Returns nothing (empty list in list context, undef in scalar context) if the
+server should continue processing the request.
+
+=head2 required
+
+    my ($status, $message) = required($request => %preconditions);
+    my $status = required($request => %preconditions);
+
+Similar to C<evaluate> but enforces that precondition headers MUST be present
+for unsafe methods (PUT, DELETE, etc.). Returns status code 428 (Precondition
+Required) if headers are missing.
+
+=head1 PRECONDITIONS
+
+The following precondition headers can be provided:
+
+=over 4
+
+=item * C<if_match> - Entity tags that must match
+
+=item * C<if_none_match> - Entity tags that must not match
+
+=item * C<if_modified_since> - Resource must be modified since this time
+
+=item * C<if_unmodified_since> - Resource must not be modified since this time
+
+=item * C<if_range> - Conditional range requests
+
+=back
+
+The server's current entity tag should be provided as C<etag>.
+
+=head1 RETURN VALUES
+
+When preconditions are not met, returns one of:
+
+=over 4
+
+=item * 304 Not Modified (for GET/HEAD requests)
+
+=item * 412 Precondition Failed (for other methods)
+
+=item * 428 Precondition Required (for unsafe methods without required headers)
+
+=back
+
+When preconditions are met, returns:
+
+=over 4
+
+=item * nothing (empty list or undef) - server should continue processing
+
+=back
+
+In list context, a detailed message is included with the status code explaining
+why the precondition failed.
+
+=head1 SEE ALSO
+
+=over 4
+
+=item * L<RFC 9110 Section 13|https://www.rfc-editor.org/rfc/rfc9110.html#name-conditional-requests>
+
+=item * L<HTTP::Headers>
+
+=item * L<HTTP::Message>
+
+=back
+
+=head1 AUTHOR
+
+Theo van Hoesel
+
+=head1 LICENSE
+
+This software is copyright (c) 2024 by Theo van Hoesel.
+
+This is free software; you can redistribute it and/or modify it under the same
+terms as the Perl 5 programming language system itself.
+
+=cut 
